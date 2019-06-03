@@ -99,7 +99,12 @@ class PackageRubyBundlePlugin {
   nativeLinuxBundle(){
     this.log(`Building gems with native extensions for linux`);
     const localPath = this.serverless.config.servicePath;
-    execSync(`docker run --rm -v "${localPath}:/var/task" lambci/lambda:build-ruby2.5 bundle install --standalone --path vendor/bundle`)
+    if (fs.existsSync(`${localPath}/Dockerfile`)) {
+      execSync(`docker build -t lambda:local-build ${localPath}`)
+      execSync(`docker run --rm -v "${localPath}:/var/task" lambda:local-build bundle install --standalone --path vendor/bundle`)
+    } else {
+      execSync(`docker run --rm -v "${localPath}:/var/task" lambci/lambda:build-ruby2.5 bundle install --standalone --path vendor/bundle`)
+    }
   }
 
   warnOnUnsupportedRuntime(){
